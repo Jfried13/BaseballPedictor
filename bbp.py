@@ -24,67 +24,75 @@ AVG = []
 OPS = []
 OBP = []
 SLG = []
+SO = []
 SH = []
 SF = []
+
+itemBank = []
 
 page = requests.get('https://www.rotowire.com/baseball/player_stats.htm?season=2011')
 soup = BeautifulSoup(page.text, 'html.parser')
 
 body = soup.find_all('tbody')
 trs = body[0].find_all('tr')
-
+#print(len(trs))
+p = trs[0]
+ps = p.find_all('td')
 for player in trs:
-	player_stats = player.find_all('td')
-	player_name = [x.strip() for x in player_stats[0].text.split(',')]
-	last_name.append(player_name[0])
-	first_name.append(player_name[1])
-	team.append(player_stats[1].text)
-	pos.append(player_stats[2].text)
-	G.append(player_stats[3].text)
-	AB.append(player_stats[4].text)
-	R.append(player_stats[5].text)
-	H.append(player_stats[6].text)
-	DOUBLES.append(player_stats[7].text)
-	TRIPLES.append(player_stats[8].text)
-	RBI.append(player_stats[9].text)
-	HR.append(player_stats[10].text)
-	SB.append(player_stats[11].text)
-	walk.append(player_stats[12].text)
-	CS.append(player_stats[13].text)
-	HBP.append(player_stats[14].text)
-	AVG.append(player_stats[15].text)
-	OPS.append(player_stats[16].text)
-	OBP.append(player_stats[17].text)
-	SLG.append(player_stats[18].text)
-	SH.append(player_stats[19].text)
-	SF.append(player_stats[20].text)
+    player_stats = player.find_all('td')
+    player_name = [x.strip() for x in player_stats[0].text.split(',')]
+    if "'" in player_name[0]:
+       print("TRUE")
+       print(player_name)
+       tempName = player_name[0].replace("'", '')
+       print(tempName)
+       last_name.append(tempName)
+    else:
+       last_name.append(player_name[0])
+    first_name.append(player_name[1])
+    team.append(player_stats[1].text)
+    pos.append(player_stats[2].text)
+    G.append(player_stats[3].text)
+    AB.append(player_stats[4].text)
+    R.append(player_stats[5].text)
+    H.append(player_stats[6].text)
+    DOUBLES.append(player_stats[7].text)
+    TRIPLES.append(player_stats[8].text)
+    HR.append(player_stats[9].text)
+    RBI.append(player_stats[10].text)
+    SB.append(player_stats[11].text)
+    CS.append(player_stats[12].text)
+    walk.append(player_stats[13].text)
+    SO.append(player_stats[14].text)
+    SH.append(player_stats[15].text)
+    SF.append(player_stats[16].text)
+    HBP.append(player_stats[17].text)
+    AVG.append(player_stats[18].text)
+    OBP.append(player_stats[19].text)
+    SLG.append(player_stats[20].text)
+    OPS.append(player_stats[21].text)
+
 
 
 # Open database connection
-db = pymysql.connect("localhost","testuser","hello","TESTDB" )
+db = pymysql.connect("localhost","root","password","TESTDB")
 
 # prepare a cursor object using cursor() method
 cursor = db.cursor()
 
-# Prepare SQL query to INSERT a record into the database.
-sql = "INSERT INTO EMPLOYEE(FIRST_NAME, \
-   LAST_NAME, AGE, SEX, INCOME) \
-   VALUES ('%s', '%s', '%d', '%c', '%d' )" % \
-   ('Macie', 'Mohan', 20, 'M', 2000)
 
-insert_player = "INSERT INTO PLAYER(FIRST_NAME, LAST_NAME, TEAM, \
+insert_player = """INSERT INTO PLAYER(FIRST_NAME, LAST_NAME, TEAM, \
 				POS, GAMES, AB, RUNS, HITS, DOUBLES, TRIPLES, RBI, HR, \
-				SB, WALKS, CS, AVG, OPS, OBP, SLG, SH, SF) \
+				SB, WALKS, CS, HBP, AVG, OPS, OBP, SLG, SH, SF) \
 				VALUES ('%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', \
-						'%f', '%f', '%f', '%f', '%d', '%d' )" % \
-				(first_name[0], last_name[0], team[0], pos[0], G[0], AB[0], R[0], H[0], DOUBLES[0], TRIPLES[0], 
-					RBI[0], HR[0], SB[0], walk[0], CS[0], HBP[0], AVG[0], OPS[0], OBP[0], SLG[0], SH[0], SF[0])
+						'%d', '%f', '%f', '%f', '%f', '%d', '%d' )"""
+
 
 create_player_table = """CREATE TABLE PLAYER (
    FIRST_NAME  CHAR(20) NOT NULL,
    LAST_NAME  CHAR(20) NOT NULL,
    TEAM CHAR(20) NOT NULL,
-   POS char(5) NOT NULL,
+   POS CHAR(5) NOT NULL,
    GAMES INT NOT NULL,
    AB INT NOT NULL,
    RUNS INT NOT NULL,
@@ -96,6 +104,7 @@ create_player_table = """CREATE TABLE PLAYER (
    SB INT NOT NULL,
    WALKS INT NOT NULL,
    CS INT NOT NULL,
+   HBP INT NOT NULL,
    AVG FLOAT NOT NULL,  
    OPS FLOAT NOT NULL,
    OBP FLOAT NOT NULL,
@@ -103,21 +112,62 @@ create_player_table = """CREATE TABLE PLAYER (
    SH INT NOT NULL,
    SF INT NOT NULL)"""
 
+for index in range(0, 663):
+      itemBank.append((
+         last_name[index],
+         first_name[index],
+         team[index],
+         pos[index],
+         int(G[index]),
+         int(AB[index]),
+         int(R[index]),
+         int(H[index]),
+         int(DOUBLES[index]),
+         int(TRIPLES[index]),
+         int(HR[index]),
+         int(RBI[index]),
+         int(SB[index]),
+         int(CS[index]),
+         int(walk[index]),
+         int(SO[index]),
+         int(SH[index]),
+         int(SF[index]),
+         int(HBP[index]),
+         float(AVG[index]),
+         float(OBP[index]),
+         float(SLG[index]),
+         float(OPS[index])
+      ))
+
+
 try:
+   #print(itemBank)
    # Execute the SQL command
    cursor.execute("DROP TABLE IF EXISTS PLAYER")
    cursor.execute(create_player_table)
-   cursor.execute(insert_player)
-
+   
+   for num in range(0,663):
+   #while num < 663:
+      print("inserting player number {}".format(num))
+      cur_player_insert = "INSERT INTO PLAYER(FIRST_NAME, LAST_NAME, TEAM, POS, \
+         GAMES, AB, RUNS, HITS, DOUBLES, TRIPLES, RBI, HR, \
+         SB, WALKS, CS, HBP, AVG, OPS, OBP, SLG, SH, SF) \
+         VALUES ('%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', \
+         '%d', '%f', '%f', '%f', '%f', '%d', '%d' )" % \
+         (first_name[num], last_name[num], team[num], pos[num], int(G[num]), int(AB[num]), int(R[num]), int(H[num]), int(DOUBLES[num]), 
+		 int(TRIPLES[num]), int(RBI[num]), int(HR[num]), int(SB[num]), int(walk[num]), int(CS[num]), int(HBP[num]), float(AVG[num]), 
+		 float(OPS[num]), float(OBP[num]), float(SLG[num]), int(SH[num]), int(SF[num]))
+      cursor.execute(cur_player_insert)
    # Commit your changes in the database
-   db.commit()
+      db.commit()
+   #print("SQUEEK")
+   #cursor.executemany(insert_player, itemBank)
+   #print('here')
+   #db.commit()
 except:
-   # Rollback in case there is any error
-   db.rollback()
+    # Rollback in case there is any error
+    db.rollback()
 
 # disconnect from server
 db.close()
 
-
-	#for stat in player_stats:
-	#	print(stat.text)
